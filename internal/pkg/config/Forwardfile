@@ -1,0 +1,21 @@
+relaxed = true
+
+[forwards.pod-a]
+pod = "pod-a"
+remote = "http"
+
+[forwards.pod-b]
+namespace = "app-b"
+pod = "pod-b"
+remote = "8080"
+local = "0.0.0.0:1234"
+
+[forwards.service-a]
+service = "service-a"
+remote = "http"
+
+[forwards.service-b]
+namespace = "app-b"
+service = "service-b"
+remote = "80"
+local = "8000"
