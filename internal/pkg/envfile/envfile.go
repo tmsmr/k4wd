@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"github.com/tmsmr/k4wd/internal/pkg/model"
+	"github.com/tmsmr/k4wd/internal/pkg/forwarder"
 	"os"
 	"path"
 	"path/filepath"
@@ -47,7 +47,7 @@ func (ef Envfile) Exists() (bool, error) {
 	}
 }
 
-func (ef Envfile) Update(forwards map[string]*model.PortForwardSpec) error {
+func (ef Envfile) Update(forwards map[string]*forwarder.Forwarder) error {
 	var content bytes.Buffer
 	for _, fwd := range forwards {
 		if !fwd.Active {
@@ -56,7 +56,7 @@ func (ef Envfile) Update(forwards map[string]*model.PortForwardSpec) error {
 		re := regexp.MustCompile(`\W`)
 		pfName := strings.ToUpper(re.ReplaceAllString(fwd.Name, "_"))
 		envName := fmt.Sprintf("%s_ADDR", pfName)
-		content.WriteString(fmt.Sprintf("# %s\n%s=%s:%d\n\n", fwd.String(), envName, fwd.LocalAddr, fwd.LocalPort))
+		content.WriteString(fmt.Sprintf("# %s\n%s=%s:%d\n\n", fwd.Name, envName, fwd.LocalAddr, fwd.LocalPort))
 	}
 	return os.WriteFile(ef.path, content.Bytes(), envFilePerm)
 }

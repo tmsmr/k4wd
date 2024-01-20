@@ -25,8 +25,8 @@ func start(confPath string, kubeconfPath string) {
 	conf, err := config.Load(config.WithPath(confPath))
 	must(err)
 	entries := make([]string, 0)
-	for _, f := range conf.Forwards {
-		entries = append(entries, f.Name)
+	for n := range conf.Forwards {
+		entries = append(entries, n)
 	}
 	log.Infof("loaded %s (relaxed=%t) containing %d entries: (%s)", conf.Path, conf.Relaxed, len(conf.Forwards), strings.Join(entries, ", "))
 
@@ -47,12 +47,17 @@ func start(confPath string, kubeconfPath string) {
 		must(ef.Remove())
 	}()
 
+	fwds := make(map[string]*forwarder.Forwarder)
+	for name, spec := range conf.Forwards {
+		fwd, err := forwarder.New(name, spec)
+		must(err)
+		fwds[name] = fwd
+	}
+
 	var fwdsActive sync.WaitGroup
 	stopFwds := make(chan struct{}, 1)
 
-	for name := range conf.Forwards {
-		spec := conf.Forwards[name]
-		fwd := forwarder.New(spec)
+	for name, fwd := range fwds {
 		fwdFailed := make(chan struct{}, 1)
 
 		go func() {
@@ -61,11 +66,11 @@ func start(confPath string, kubeconfPath string) {
 
 			err := fwd.Run(kc, stopFwds)
 			if err != nil {
-				spec.Active = false
-				must(ef.Update(conf.Forwards))
-				log.Warnf("%s failed: %v", spec.Name, err)
+				fwd.Active = false
+				must(ef.Update(fwds))
+				log.Warnf("%s failed: %v", name, err)
 				if !conf.Relaxed {
-					log.Errorf("%s failed with global relaxed=false, stopping all forwards", spec.Name)
+					log.Errorf("%s failed with global relaxed=false, stopping all forwards", name)
 					close(stopFwds)
 				}
 				close(fwdFailed)
@@ -74,9 +79,9 @@ func start(confPath string, kubeconfPath string) {
 
 		select {
 		case <-fwd.Ready:
-			spec.Active = true
-			must(ef.Update(conf.Forwards))
-			log.Infof("%s ready: %s:%d -> %s, %s, %d", spec.Name, spec.LocalAddr, spec.LocalPort, spec.Namespace, spec.Pod, spec.TargetPort)
+			fwd.Active = true
+			must(ef.Update(fwds))
+			log.Infof("%s ready: %s:%d -> %s, %s, %d", name, fwd.LocalAddr, fwd.LocalPort, fwd.Namespace, fwd.TargetPod, fwd.TargetPort)
 			break
 		case <-fwdFailed:
 			break
