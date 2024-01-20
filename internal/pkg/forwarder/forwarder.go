@@ -46,7 +46,11 @@ func New(spec *model.PortForwardSpec) *Forwarder {
 }
 
 func (fwd *Forwarder) resolveServiceTarget(kc *kubeclient.Kubeclient) (*v1.Pod, int32, error) {
-	service, err := kc.Clientset.CoreV1().Services(fwd.spec.Namespace).Get(context.TODO(), fwd.spec.Service, metav1.GetOptions{})
+	cs, err := kc.Clientset(fwd.spec.Context)
+	if err != nil {
+		return nil, 0, err
+	}
+	service, err := cs.CoreV1().Services(fwd.spec.Namespace).Get(context.TODO(), fwd.spec.Service, metav1.GetOptions{})
 	if err != nil {
 		return nil, 0, err
 	}
@@ -62,7 +66,7 @@ func (fwd *Forwarder) resolveServiceTarget(kc *kubeclient.Kubeclient) (*v1.Pod, 
 	}
 	selector := labels.SelectorFromSet(service.Spec.Selector)
 	sorter := func(pods []*v1.Pod) sort.Interface { return sort.Reverse(podutils.ActivePods(pods)) }
-	pod, _, err := polymorphichelpers.GetFirstPod(kc.Clientset.CoreV1(), fwd.spec.Namespace, selector.String(), podBySelectorTimeout, sorter)
+	pod, _, err := polymorphichelpers.GetFirstPod(cs.CoreV1(), fwd.spec.Namespace, selector.String(), podBySelectorTimeout, sorter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -74,7 +78,11 @@ func (fwd *Forwarder) resolveServiceTarget(kc *kubeclient.Kubeclient) (*v1.Pod, 
 }
 
 func (fwd *Forwarder) resolvePodTarget(kc *kubeclient.Kubeclient) (*v1.Pod, int32, error) {
-	pod, err := kc.Clientset.CoreV1().Pods(fwd.spec.Namespace).Get(context.TODO(), fwd.spec.Pod, metav1.GetOptions{})
+	cs, err := kc.Clientset(fwd.spec.Context)
+	if err != nil {
+		return nil, 0, err
+	}
+	pod, err := cs.CoreV1().Pods(fwd.spec.Namespace).Get(context.TODO(), fwd.spec.Pod, metav1.GetOptions{})
 	if err != nil {
 		return nil, 0, err
 	}
@@ -123,11 +131,19 @@ func (fwd *Forwarder) Run(kc *kubeclient.Kubeclient, stop chan struct{}) error {
 	if pod.Status.Phase != v1.PodRunning {
 		return errors.New("pod not running")
 	}
-	transport, upgrader, err := spdy.RoundTripperFor(kc.Config)
+	rc, err := kc.RESTConfig(fwd.spec.Context)
 	if err != nil {
 		return err
 	}
-	req := kc.Clientset.CoreV1().RESTClient().Post().
+	transport, upgrader, err := spdy.RoundTripperFor(rc)
+	if err != nil {
+		return err
+	}
+	cs, err := kc.Clientset(fwd.spec.Context)
+	if err != nil {
+		return err
+	}
+	req := cs.CoreV1().RESTClient().Post().
 		Resource("pods").
 		Namespace(fwd.spec.Namespace).
 		Name(pod.Name).

@@ -25,6 +25,8 @@ type PortForwardSpec struct {
 	LocalPort  int32  `toml:"-"`
 	TargetPort int32  `toml:"-"`
 	Active     bool   `toml:"-"`
+
+	Context *string
 }
 
 func (pf *PortForwardSpec) Complete(name string) error {

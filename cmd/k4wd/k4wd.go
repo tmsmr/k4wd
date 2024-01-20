@@ -37,7 +37,7 @@ func start(confPath string, kubeconfPath string) {
 		kc, err = kubeclient.New(kubeclient.WithKubeconfig(kubeconfPath))
 	}
 	must(err)
-	log.Infof("created Kubeclient for %s (%s)", kc.Config.Host, kc.Kubeconfig)
+	log.Infof("created Kubeclient for %s", kc.Kubeconfig)
 
 	ef, err := envfile.New()
 	must(err)
