@@ -75,7 +75,7 @@ func New(name string, spec config.Forward) (*Forwarder, error) {
 }
 
 func (fwd *Forwarder) resolveServiceTarget(kc *kubeclient.Kubeclient) (*v1.Pod, int32, error) {
-	cs, err := kc.Clientset(fwd.Forward.Context)
+	cs, err := kc.Clientset(fwd.Forward.Context, nil)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -107,7 +107,7 @@ func (fwd *Forwarder) resolveServiceTarget(kc *kubeclient.Kubeclient) (*v1.Pod, 
 }
 
 func (fwd *Forwarder) resolvePodTarget(kc *kubeclient.Kubeclient) (*v1.Pod, int32, error) {
-	cs, err := kc.Clientset(fwd.Forward.Context)
+	cs, err := kc.Clientset(fwd.Forward.Context, nil)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -168,7 +168,7 @@ func (fwd *Forwarder) Run(kc *kubeclient.Kubeclient, stop chan struct{}) error {
 	if err != nil {
 		return err
 	}
-	cs, err := kc.Clientset(fwd.Forward.Context)
+	cs, err := kc.Clientset(fwd.Forward.Context, nil)
 	if err != nil {
 		return err
 	}

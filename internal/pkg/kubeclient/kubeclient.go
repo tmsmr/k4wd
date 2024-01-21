@@ -56,12 +56,15 @@ func (kc Kubeclient) RESTConfig(context *string) (*rest.Config, error) {
 	return restConfig, nil
 }
 
-func (kc Kubeclient) Clientset(context *string) (*kubernetes.Clientset, error) {
-	restConfig, err := kc.RESTConfig(context)
-	if err != nil {
-		return nil, err
+func (kc Kubeclient) Clientset(context *string, config *rest.Config) (*kubernetes.Clientset, error) {
+	var err error
+	if config == nil {
+		config, err = kc.RESTConfig(context)
+		if err != nil {
+			return nil, err
+		}
 	}
-	clientset, err := kubernetes.NewForConfig(restConfig)
+	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, err
 	}
