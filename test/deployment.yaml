@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: context
+  namespace: k4wd
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: context
+  template:
+    metadata:
+      labels:
+        app: context
+    spec:
+      containers:
+        - name: context
+          image: ghcr.io/tmsmr/context:latest
+          args: [-e]
+          env:
+            - name: K4WD_TYPE
+              value: "deployment"
+          ports:
+            - name: http-alt
+              containerPort: 8080

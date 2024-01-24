@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: context
+  namespace: k4wd
+spec:
+  containers:
+    - name: context
+      image: ghcr.io/tmsmr/context:latest
+      args: [-e]
+      env:
+        - name: K4WD_TYPE
+          value: "pod"
+      ports:
+      - name: http-alt
+        containerPort: 8080
