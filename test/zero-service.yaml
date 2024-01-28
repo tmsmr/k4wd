@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: int-test-svc-zero
+  namespace: k4wd
+spec:
+  selector:
+    app: context-zero
+  ports:
+    - name: http-alt
+      port: 8080
+      targetPort: http-alt

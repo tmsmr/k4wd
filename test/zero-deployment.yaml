@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: int-test-de-zero
+  namespace: k4wd
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: context-zero
+  template:
+    metadata:
+      labels:
+        app: context-zero
+    spec:
+      containers:
+        - name: context
+          image: ghcr.io/tmsmr/context:latest

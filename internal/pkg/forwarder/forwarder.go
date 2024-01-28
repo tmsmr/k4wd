@@ -25,7 +25,7 @@ import (
 const (
 	defaultNamespace     = "default"
 	defaultBindAddr      = "127.0.0.1"
-	podBySelectorTimeout = 10 * time.Second
+	podBySelectorTimeout = 5 * time.Second
 )
 
 type Forwarder struct {

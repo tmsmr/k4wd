@@ -22,26 +22,6 @@ import (
 	"testing"
 )
 
-var ff = config.Forwardfile{
-	Forwards: map[string]config.Forward{
-		"int-test-po": {
-			Pod:       "int-test-po",
-			Namespace: func() *string { s := "k4wd"; return &s }(),
-			Remote:    "http-alt",
-		},
-		"int-test-de": {
-			Deployment: "int-test-de",
-			Namespace:  func() *string { s := "k4wd"; return &s }(),
-			Remote:     "http-alt",
-		},
-		"int-test-svc": {
-			Service:   "int-test-svc",
-			Namespace: func() *string { s := "k4wd"; return &s }(),
-			Remote:    "http-alt",
-		},
-	},
-}
-
 func setupIntegrationTests() (bool, error, *kubeclient.Kubeclient) {
 	if os.Getenv("K4WD_INTEGRATION_TESTS") == "" {
 		return true, nil, nil
@@ -113,9 +93,83 @@ func TestForwarder_Run(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"valid pod tagret", fields{"int-test-po", ff.Forwards["int-test-po"]}, args{kc, "pod"}, false},
-		{"valid deployment target", fields{"int-test-de", ff.Forwards["int-test-de"]}, args{kc, "deployment"}, false},
-		{"valid service target", fields{"int-test-svc", ff.Forwards["int-test-svc"]}, args{kc, "deployment"}, false},
+		{"valid pod forward", fields{"int-test-po", config.Forward{
+			Pod:       "int-test-po",
+			Namespace: func() *string { s := "k4wd"; return &s }(),
+			Remote:    "http-alt",
+		}}, args{kc, "pod"}, false},
+
+		{"unknown pod forward", fields{"int-test-po-unknown", config.Forward{
+			Pod:       "int-test-po-unknown",
+			Namespace: func() *string { s := "k4wd"; return &s }(),
+			Remote:    "http-alt",
+		}}, args{kc, ""}, true},
+
+		{"valid numerical port pod forward", fields{"int-test-po-numerical", config.Forward{
+			Pod:       "int-test-po",
+			Namespace: func() *string { s := "k4wd"; return &s }(),
+			Remote:    "8080",
+		}}, args{kc, "pod"}, false},
+
+		{"invalid named port pod forward", fields{"int-test-po-invalid-named", config.Forward{
+			Pod:       "int-test-po",
+			Namespace: func() *string { s := "k4wd"; return &s }(),
+			Remote:    "mysql",
+		}}, args{kc, ""}, true},
+
+		{"valid deployment forward", fields{"int-test-de", config.Forward{
+			Deployment: "int-test-de",
+			Namespace:  func() *string { s := "k4wd"; return &s }(),
+			Remote:     "http-alt",
+		}}, args{kc, "deployment"}, false},
+
+		{"unknown deployment forward", fields{"int-test-de-unknown", config.Forward{
+			Deployment: "int-test-de-unknown",
+			Namespace:  func() *string { s := "k4wd"; return &s }(),
+			Remote:     "http-alt",
+		}}, args{kc, ""}, true},
+
+		{"zero pods deployment forward", fields{"int-test-de-zero", config.Forward{
+			Deployment: "int-test-de-zero",
+			Namespace:  func() *string { s := "k4wd"; return &s }(),
+			Remote:     "http-alt",
+		}}, args{kc, ""}, true},
+
+		{"valid service forward", fields{"int-test-svc", config.Forward{
+			Service:   "int-test-svc",
+			Namespace: func() *string { s := "k4wd"; return &s }(),
+			Remote:    "http-alt",
+		}}, args{kc, "deployment"}, false},
+
+		{"valid numerical port service forward", fields{"int-test-svc-numerical", config.Forward{
+			Service:   "int-test-svc",
+			Namespace: func() *string { s := "k4wd"; return &s }(),
+			Remote:    "8080",
+		}}, args{kc, "deployment"}, false},
+
+		{"invalid named port service forward", fields{"int-test-svc-invalid-named", config.Forward{
+			Service:   "int-test-svc",
+			Namespace: func() *string { s := "k4wd"; return &s }(),
+			Remote:    "mysql",
+		}}, args{kc, ""}, true},
+
+		{"invalid named target port service forward", fields{"int-test-svc-invalid-named-target", config.Forward{
+			Service:   "int-test-svc-invalid-target",
+			Namespace: func() *string { s := "k4wd"; return &s }(),
+			Remote:    "http-alt",
+		}}, args{kc, ""}, true},
+
+		{"unknown service target", fields{"int-test-svc-unknown", config.Forward{
+			Service:   "int-test-svc-unknown",
+			Namespace: func() *string { s := "k4wd"; return &s }(),
+			Remote:    "http-alt",
+		}}, args{kc, ""}, true},
+
+		{"zero pods service target", fields{"int-test-svc-zero", config.Forward{
+			Service:   "int-test-svc-zero",
+			Namespace: func() *string { s := "k4wd"; return &s }(),
+			Remote:    "http-alt",
+		}}, args{kc, ""}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -126,6 +180,9 @@ func TestForwarder_Run(t *testing.T) {
 			val, err := checkForward(fwd, tt.args.kc)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if err != nil {
 				return
 			}
 			if val != tt.args.k4wdType {
