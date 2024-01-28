@@ -16,6 +16,7 @@ func TestForward_Type(t *testing.T) {
 		{"pod", fields{Pod: "pod"}, ForwardTypePod},
 		{"deployment", fields{Deployment: "deployment"}, ForwardTypeDeployment},
 		{"service", fields{Service: "service"}, ForwardTypeService},
+		{"invalid", fields{}, -1},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

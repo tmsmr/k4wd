@@ -36,13 +36,13 @@ func setupIntegrationTests() (bool, error, *kubeclient.Kubeclient) {
 func checkForward(fwd *Forwarder, kc *kubeclient.Kubeclient) (string, error) {
 	stop := make(chan struct{}, 1)
 	defer close(stop)
-	failed := make(chan error, 1)
-	defer close(failed)
+	done := make(chan error, 1)
 	go func() {
 		err := fwd.Run(kc, stop)
 		if err != nil {
-			failed <- err
+			done <- err
 		}
+		close(done)
 	}()
 	select {
 	case <-fwd.Ready:
@@ -66,12 +66,12 @@ func checkForward(fwd *Forwarder, kc *kubeclient.Kubeclient) (string, error) {
 			return "", fmt.Errorf("missing K4WD_TYPE env variable")
 		}
 		return data.Env["K4WD_TYPE"], nil
-	case err := <-failed:
+	case err := <-done:
 		return "", err
 	}
 }
 
-func TestForwarder_Run(t *testing.T) {
+func TestForwarder_Integration_Run(t *testing.T) {
 	skip, err, kc := setupIntegrationTests()
 	if skip {
 		t.Skip("skipping integration test")
@@ -93,6 +93,11 @@ func TestForwarder_Run(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
+		{"invalid forward type", fields{"int-test-invalid-type", config.Forward{
+			Namespace: func() *string { s := "k4wd"; return &s }(),
+			Remote:    "http-alt",
+		}}, args{kc, "pod"}, true},
+
 		{"valid pod forward", fields{"int-test-po", config.Forward{
 			Pod:       "int-test-po",
 			Namespace: func() *string { s := "k4wd"; return &s }(),
@@ -115,6 +120,18 @@ func TestForwarder_Run(t *testing.T) {
 			Pod:       "int-test-po",
 			Namespace: func() *string { s := "k4wd"; return &s }(),
 			Remote:    "mysql",
+		}}, args{kc, ""}, true},
+
+		{"udp port pod forward", fields{"int-test-po-udp", config.Forward{
+			Pod:       "int-test-po-multiple-udp",
+			Namespace: func() *string { s := "k4wd"; return &s }(),
+			Remote:    "8081",
+		}}, args{kc, ""}, true},
+
+		{"pod forward connection refused", fields{"int-test-po-refused", config.Forward{
+			Pod:       "int-test-po-multiple-udp",
+			Namespace: func() *string { s := "k4wd"; return &s }(),
+			Remote:    "8082",
 		}}, args{kc, ""}, true},
 
 		{"valid deployment forward", fields{"int-test-de", config.Forward{

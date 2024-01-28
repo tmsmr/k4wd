@@ -1,6 +1,7 @@
 resources:
   - namespace.yaml
   - pod.yaml
+  - pod-multiple-udp.yaml
   - deployment.yaml
   - zero-deployment.yaml
   - service.yaml

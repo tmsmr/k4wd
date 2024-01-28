@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: int-test-po-multiple-udp
+  namespace: k4wd
+spec:
+  containers:
+    - name: context
+      image: ghcr.io/tmsmr/context:latest
+      ports:
+      - containerPort: 8080
+      - containerPort: 8081
+        protocol: UDP
+      - containerPort: 8082

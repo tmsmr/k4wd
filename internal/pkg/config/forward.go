@@ -31,7 +31,10 @@ func (f *Forward) Type() ForwardType {
 	if f.Service != "" {
 		return ForwardTypeService
 	}
-	return ForwardTypePod
+	if f.Pod != "" {
+		return ForwardTypePod
+	}
+	return -1
 }
 
 func (f *Forward) LocalAddr() (string, int32, error) {

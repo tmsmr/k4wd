@@ -2,6 +2,8 @@ package forwarder
 
 import (
 	"github.com/tmsmr/k4wd/internal/pkg/config"
+	"github.com/tmsmr/k4wd/internal/pkg/kubeclient"
+	"k8s.io/client-go/tools/clientcmd/api"
 	"testing"
 )
 
@@ -41,6 +43,35 @@ func TestNew(t *testing.T) {
 			}
 			if got.RandPort != tt.want.RandPort {
 				t.Errorf("New() RandPort = %v, want %v", got.RandPort, tt.want.RandPort)
+			}
+		})
+	}
+}
+
+func TestForwarder_Run(t *testing.T) {
+	type fields struct {
+		Name    string
+		Forward config.Forward
+	}
+	type args struct {
+		kc *kubeclient.Kubeclient
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{"invalid kubeclient", fields{"invalid-kubeclient", config.Forward{}}, args{&kubeclient.Kubeclient{APIConfig: &api.Config{}}}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fwd := &Forwarder{
+				Name:    tt.fields.Name,
+				Forward: tt.fields.Forward,
+			}
+			if err := fwd.Run(tt.args.kc, make(chan struct{})); (err != nil) != tt.wantErr {
+				t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
