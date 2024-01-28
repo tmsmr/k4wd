@@ -1,0 +1,8 @@
+resources:
+  - namespace.yaml
+  - pod.yaml
+  - deployment.yaml
+  - zero-deployment.yaml
+  - service.yaml
+  - zero-service.yaml
+  - invalid-target-service.yaml
