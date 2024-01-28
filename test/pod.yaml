@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: context
+  name: int-test-po
   namespace: k4wd
 spec:
   containers:
