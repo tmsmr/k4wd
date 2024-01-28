@@ -93,7 +93,7 @@ func TestForwarder_Integration_Run(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"invalid forward type", fields{"int-test-invalid-type", config.Forward{
+		{"missing/invalid forward type", fields{"int-test-invalid-type", config.Forward{
 			Namespace: func() *string { s := "k4wd"; return &s }(),
 			Remote:    "http-alt",
 		}}, args{kc, "pod"}, true},

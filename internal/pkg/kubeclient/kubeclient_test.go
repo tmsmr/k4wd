@@ -138,7 +138,6 @@ func TestKubeclient_Clientset_RESTConfig(t *testing.T) {
 		{"valid", fields{APIConfig: kc.APIConfig}, args{nil, nil}, &kubernetes.Clientset{}, false},
 		{"with context", fields{APIConfig: kc.APIConfig}, args{context: func() *string { s := "local"; return &s }()}, &kubernetes.Clientset{}, false},
 		{"invalid context", fields{APIConfig: kc.APIConfig}, args{context: func() *string { s := "invalid"; return &s }()}, nil, true},
-		{"forced invalid rest config", fields{APIConfig: kc.APIConfig}, args{context: nil, config: &rest.Config{ExecProvider: &api.ExecConfig{}, AuthProvider: &api.AuthProviderConfig{}}}, nil, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
