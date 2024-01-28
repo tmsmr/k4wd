@@ -192,7 +192,16 @@ func (fwd *Forwarder) Run(kc *kubeclient.Kubeclient, stop chan struct{}) error {
 	fwd.TargetPod = pod.Name
 	fwd.TargetPort = port
 	if fwd.RandPort {
-		fwd.BindPort = int32(randomLocalPort())
+		local, err := randomLocalPort()
+		if err != nil {
+			return err
+		}
+		fwd.BindPort = int32(local)
+	}
+
+	// ensure pod is running
+	if pod.Status.Phase != v1.PodRunning {
+		return fmt.Errorf("target pod not running: %s", fwd.TargetPod)
 	}
 
 	// start forwarding
