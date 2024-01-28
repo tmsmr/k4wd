@@ -3,7 +3,7 @@ package forwarder
 /*
 Tests in this file are integration tests, they require some prerequisites to run:
 - a running Kubernetes cluster and the kubeconfig file at the default location
-- deployed manifests from the https://github.com/tmsmr/k4wd/tree/main/test directory
+- deployed manifests from the https://github.com/tmsmr/k4wd/tree/main/test/integration directory
 
 The tests will be skipped if K4WD_INTEGRATION_TESTS is not set.
 
