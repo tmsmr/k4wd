@@ -56,7 +56,7 @@ func (ef Envfile) Update(forwards map[string]*forwarder.Forwarder) error {
 		re := regexp.MustCompile(`\W`)
 		pfName := strings.ToUpper(re.ReplaceAllString(fwd.Name, "_"))
 		envName := fmt.Sprintf("%s_ADDR", pfName)
-		content.WriteString(fmt.Sprintf("# %s\n%s=%s:%d\n\n", fwd.Name, envName, fwd.LocalAddr, fwd.LocalPort))
+		content.WriteString(fmt.Sprintf("# %s\n%s=%s:%d\n\n", fwd.Name, envName, fwd.BindAddr, fwd.BindPort))
 	}
 	return os.WriteFile(ef.path, content.Bytes(), envFilePerm)
 }

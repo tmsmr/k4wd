@@ -71,6 +71,7 @@ func start(confPath string, kubeconfPath string) {
 				log.Warnf("%s failed: %v", name, err)
 				if !conf.Relaxed {
 					log.Errorf("%s failed with global relaxed=false, stopping all forwards", name)
+					// TODO: panics for multiple failed forwards...
 					close(stopFwds)
 				}
 				close(fwdFailed)
@@ -81,7 +82,7 @@ func start(confPath string, kubeconfPath string) {
 		case <-fwd.Ready:
 			fwd.Active = true
 			must(ef.Update(fwds))
-			log.Infof("%s ready: %s:%d -> %s, %s, %d", name, fwd.LocalAddr, fwd.LocalPort, fwd.Namespace, fwd.TargetPod, fwd.TargetPort)
+			log.Infof("%s ready: %s:%d -> %s, %s, %d", name, fwd.BindAddr, fwd.BindPort, fwd.Namespace, fwd.TargetPod, fwd.TargetPort)
 			break
 		case <-fwdFailed:
 			break

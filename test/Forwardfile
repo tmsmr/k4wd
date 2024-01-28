@@ -4,8 +4,14 @@ namespace = "k4wd"
 remote = "http-alt"
 local = "8080"
 
+[forwards.context-deployment]
+deployment = "context"
+namespace = "k4wd"
+remote = "http-alt"
+local = "8081"
+
 [forwards.context-service]
 service = "context"
 namespace = "k4wd"
 remote = "http-alt"
-local = "8090"
+local = "8082"
