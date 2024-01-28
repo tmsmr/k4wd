@@ -49,6 +49,7 @@ func (ef Envfile) Exists() (bool, error) {
 
 func (ef Envfile) Update(forwards map[string]*forwarder.Forwarder) error {
 	var content bytes.Buffer
+	// TODO: support multiple formats (e.g. like https://awscli.amazonaws.com/v2/documentation/api/latest/reference/configure/export-credentials.html)
 	for _, fwd := range forwards {
 		if !fwd.Active {
 			continue
