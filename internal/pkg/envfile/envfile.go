@@ -3,41 +3,56 @@ package envfile
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/tmsmr/k4wd/internal/pkg/forwarder"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
+)
+
+type EnvFormat int
+
+const (
+	FormatJSON EnvFormat = iota
+	FormatDefault
+	FormatNoExport
+	FormatPS
+	FormatCmd
 )
 
 const (
-	envFilePerm = 0644
+	filePrefix = "k4wd_env_"
+	filePerm   = 0644
+	envSuffix  = "ADDR"
 )
 
+type envEntry struct {
+	Addr  string `json:"addr"`
+	Value string `json:"value"`
+}
+
 type Envfile struct {
+	mu   sync.Mutex
 	path string
 }
 
-func New() (*Envfile, error) {
-	cwd, err := os.Getwd()
+func New(ref string) (*Envfile, error) {
+	abs, err := filepath.Abs(ref)
 	if err != nil {
 		return nil, err
 	}
 	hash := sha256.New()
-	hash.Write([]byte(cwd))
+	hash.Write([]byte(abs))
 	return &Envfile{
-		path: filepath.Join(os.TempDir(), "k4wd_env_"+fmt.Sprintf("%x", hash.Sum(nil))),
+		path: filepath.Join(os.TempDir(), fmt.Sprintf("%s%x", filePrefix, hash.Sum(nil))),
 	}, nil
 }
 
-func (ef Envfile) Path() string {
-	return ef.path
-}
-
-func (ef Envfile) Exists() (bool, error) {
+func (ef *Envfile) exists() (bool, error) {
 	if _, err := os.Stat(ef.path); err == nil {
 		return true, nil
 	} else if errors.Is(err, os.ErrNotExist) {
@@ -47,59 +62,72 @@ func (ef Envfile) Exists() (bool, error) {
 	}
 }
 
-func (ef Envfile) Update(forwards map[string]*forwarder.Forwarder) error {
-	var content bytes.Buffer
-	// TODO: support multiple formats (e.g. like https://awscli.amazonaws.com/v2/documentation/api/latest/reference/configure/export-credentials.html)
-	for _, fwd := range forwards {
-		if !fwd.Active {
-			continue
-		}
-		re := regexp.MustCompile(`\W`)
-		pfName := strings.ToUpper(re.ReplaceAllString(fwd.Name, "_"))
-		envName := fmt.Sprintf("%s_ADDR", pfName)
-		content.WriteString(fmt.Sprintf("# %s\n%s=%s:%d\n\n", fwd.Name, envName, fwd.BindAddr, fwd.BindPort))
-	}
-	return os.WriteFile(ef.path, content.Bytes(), envFilePerm)
+func (ef *Envfile) Path() string {
+	return ef.path
 }
 
-func (ef Envfile) Remove() error {
+func (ef *Envfile) Update(forwards map[string]*forwarder.Forwarder) error {
+	ef.mu.Lock()
+	defer ef.mu.Unlock()
+	re := regexp.MustCompile(`\W`)
+	addrs := make([]envEntry, 0)
+	for _, fwd := range forwards {
+		addrs = append(addrs, envEntry{
+			Addr:  fmt.Sprintf("%s_%s", strings.ToUpper(re.ReplaceAllString(fwd.Name, "_")), envSuffix),
+			Value: fmt.Sprintf("%s:%d", fwd.BindAddr, fwd.BindPort),
+		})
+	}
+	data, err := json.MarshalIndent(addrs, "", "    ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(ef.path, data, filePerm)
+}
+
+func (ef *Envfile) Remove() error {
 	if ef.path == "" {
 		panic("ef.path is empty")
 	}
 	return os.Remove(ef.path)
 }
 
-func (ef Envfile) Load() ([]byte, error) {
-	exists, err := ef.Exists()
+func (ef *Envfile) Load(f EnvFormat) ([]byte, error) {
+	exists, err := ef.exists()
 	if err != nil {
 		return []byte{}, err
 	}
 	if !exists {
 		return []byte{}, fmt.Errorf("no env available")
 	}
-	return os.ReadFile(ef.path)
-}
-
-func (ef Envfile) Copy(to string) error {
-	exists, err := ef.Exists()
+	data, err := os.ReadFile(ef.path)
+	if f == FormatJSON {
+		return data, err
+	}
 	if err != nil {
-		return err
+		return []byte{}, err
 	}
-	if !exists {
-		return fmt.Errorf("no env available")
+	var addrs []envEntry
+	if err := json.Unmarshal(data, &addrs); err != nil {
+		return []byte{}, err
 	}
-	_, err = os.Stat(path.Dir(to))
-	if err != nil {
-		return fmt.Errorf("missing parent directory %s", path.Dir(to))
-	}
-	if stat, err := os.Stat(to); err == nil {
-		if stat.IsDir() {
-			return fmt.Errorf("target is a directory %s", to)
+	var content bytes.Buffer
+	for _, addr := range addrs {
+		switch f {
+		case FormatDefault:
+			content.WriteString(fmt.Sprintf("export %s=%s\n", addr.Addr, addr.Value))
+			break
+		case FormatNoExport:
+			content.WriteString(fmt.Sprintf("%s=%s\n", addr.Addr, addr.Value))
+			break
+		case FormatPS:
+			content.WriteString(fmt.Sprintf("$Env:%s=\"%s\"\n", addr.Addr, addr.Value))
+			break
+		case FormatCmd:
+			content.WriteString(fmt.Sprintf("set %s=%s\n", addr.Addr, addr.Value))
+			break
+		default:
+			panic("unknown format")
 		}
 	}
-	content, err := os.ReadFile(ef.path)
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(to, content, envFilePerm)
+	return content.Bytes(), nil
 }

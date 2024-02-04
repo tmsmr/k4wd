@@ -39,7 +39,7 @@ func start(confPath string, kubeconfPath string) {
 	must(err)
 	log.Infof("created Kubeclient for %s", kc.Kubeconfig)
 
-	ef, err := envfile.New()
+	ef, err := envfile.New(confPath)
 	must(err)
 	log.Infof("initialized Envfile for %s", ef.Path())
 	defer func() {
@@ -103,20 +103,15 @@ func start(confPath string, kubeconfPath string) {
 
 func main() {
 	envGet := flag.Bool("e", false, "get environment instead of running k4wd")
-	envPath := flag.String("p", "", "copy environment to the specified path instead of printing to STDOUT")
 	confPath := flag.String("f", "Forwardfile", "path to Forwardfile")
 	kubePath := flag.String("k", "", "alternative path to kubeconfig")
 	flag.Parse()
 	if *envGet {
-		ef, err := envfile.New()
+		ef, err := envfile.New(*confPath)
 		must(err)
-		if *envPath == "" {
-			content, err := ef.Load()
-			must(err)
-			fmt.Print(string(content))
-		} else {
-			must(ef.Copy(*envPath))
-		}
+		content, err := ef.Load(envfile.FormatDefault)
+		must(err)
+		fmt.Print(string(content))
 	} else {
 		start(*confPath, *kubePath)
 	}
