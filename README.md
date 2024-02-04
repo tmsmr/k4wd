@@ -1,5 +1,5 @@
 # K4wd
-[![Go](https://github.com/tmsmr/k4wd/actions/workflows/go.yml/badge.svg)](https://github.com/tmsmr/k4wd/actions/workflows/go.yml)
+[![Go](https://github.com/tmsmr/k4wd/actions/workflows/push.yml/badge.svg)](https://github.com/tmsmr/k4wd/actions/workflows/push.yml)
 [![Go Report](https://goreportcard.com/badge/github.com/tmsmr/k4wd)](https://goreportcard.com/report/github.com/tmsmr/k4wd)
 
 *`kubectl port-forward` on steroids*
