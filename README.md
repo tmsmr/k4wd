@@ -1,8 +1,8 @@
 # K4wd
-*`kubectl port-forward` on steroids*
----
 [![Go](https://github.com/tmsmr/k4wd/actions/workflows/go.yml/badge.svg)](https://github.com/tmsmr/k4wd/actions/workflows/go.yml)
 [![Go Report](https://goreportcard.com/badge/github.com/tmsmr/k4wd)](https://goreportcard.com/report/github.com/tmsmr/k4wd)
+
+*`kubectl port-forward` on steroids*
 
 **Work in Progress! Docs are incomplete and this tool is not properly tested yet**
 
