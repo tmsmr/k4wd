@@ -41,6 +41,7 @@ type Envfile struct {
 }
 
 func New(ref string) (*Envfile, error) {
+	// TODO: does this work on windows?
 	abs, err := filepath.Abs(ref)
 	if err != nil {
 		return nil, err
@@ -126,7 +127,7 @@ func (ef *Envfile) Load(f EnvFormat) ([]byte, error) {
 			content.WriteString(fmt.Sprintf("set %s=%s\n", addr.Addr, addr.Value))
 			break
 		default:
-			panic("unknown format")
+			return []byte{}, fmt.Errorf("unsupported format")
 		}
 	}
 	return content.Bytes(), nil
