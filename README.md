@@ -1,5 +1,8 @@
 # K4wd
 *`kubectl port-forward` on steroids*
+---
+[![Go](https://github.com/tmsmr/k4wd/actions/workflows/go.yml/badge.svg)](https://github.com/tmsmr/k4wd/actions/workflows/go.yml)
+[![Go Report](https://goreportcard.com/badge/github.com/tmsmr/k4wd)](https://goreportcard.com/report/github.com/tmsmr/k4wd)
 
 **Work in Progress! Docs are incomplete and this tool is not properly tested yet**
 
@@ -90,3 +93,4 @@ kubectl delete -f example.yaml
 ## k3d setup for GH actions...TBD
 - `curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash`
 - `k3d cluster create mycluster`
+    
