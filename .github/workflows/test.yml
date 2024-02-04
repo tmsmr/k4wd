@@ -1,6 +1,7 @@
-name: Go
+name: Test
 
-on: push
+on:
+  workflow_call:
 
 jobs:
   test:
@@ -10,6 +11,8 @@ jobs:
       uses: actions/checkout@v4
     - name: Set up Go
       uses: actions/setup-go@v5
+    - name: Build k4wd
+      run: go build ./cmd/k4wd
     - name: Start k3d
       uses: AbsaOSS/k3d-action@v2
       with:
@@ -21,5 +24,5 @@ jobs:
         kubectl apply -k test/integration
         kubectl -n k4wd wait --for=condition=Ready pods --all
         sleep 10
-    - name: Test
+    - name: Test k4wd
       run: K4WD_INTEGRATION_TESTS=true go test -v ./...
