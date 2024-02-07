@@ -53,27 +53,31 @@ INFO[0000] upstream-c ready: 127.0.0.1:57079 -> k4wd, upstream-c-6c658678ff-w6cf
 - (Optional) Get a new shell in the same context and request the active forwards as env variables, e.g.:
 ```bash
 $ k4wd -e
-# Name: 'upstream-a', Type: 1, Namespace: 'k4wd', Pod: 'upstream-a-5bcdb8b947-m2f9z', Service: 'upstream-a', Remote: 'http-alt', Local: '8080', LocalAddr: '127.0.0.1', LocalPort: 8080, TargetPort: 1234, Active: true
-UPSTREAM_A_ADDR=127.0.0.1:8080
-
-# Name: 'upstream-b', Type: 1, Namespace: 'k4wd', Pod: 'upstream-b-577855f5c7-frwjm', Service: 'upstream-b', Remote: '8080', Local: '0.0.0.0:8081', LocalAddr: '0.0.0.0', LocalPort: 8081, TargetPort: 1234, Active: true
-UPSTREAM_B_ADDR=0.0.0.0:8081
-
-# Name: 'upstream-c', Type: 1, Namespace: 'k4wd', Pod: 'upstream-c-6c658678ff-w6cf2', Service: 'upstream-c', Remote: 'http-alt', Local: '', LocalAddr: '127.0.0.1', LocalPort: 57079, TargetPort: 1234, Active: true
-UPSTREAM_C_ADDR=127.0.0.1:57079
+export UPSTREAM_A_ADDR=127.0.0.1:8080
+export UPSTREAM_B_ADDR=0.0.0.0:8081
+export UPSTREAM_C_ADDR=127.0.0.1:53058
+```
+- (Optional) Get the env variables in different formats, e.g.:
+```bash
+$ k4wd -e -o json
+[
+    {
+        "addr": "UPSTREAM_A_ADDR",
+        "value": "127.0.0.1:8080"
+    },
+    {
+        "addr": "UPSTREAM_B_ADDR",
+        "value": "0.0.0.0:8081"
+    },
+    {
+        "addr": "UPSTREAM_C_ADDR",
+        "value": "127.0.0.1:53058"
+    }
+]⏎
 ```
 - (Optional) Or write the env variables to a file, e.g.:
 ```bash
-$ k4wd -e -p .env
-$ cat .env
-# Name: 'upstream-a', Type: 1, Namespace: 'k4wd', Pod: 'upstream-a-5bcdb8b947-m2f9z', Service: 'upstream-a', Remote: 'http-alt', Local: '8080', LocalAddr: '127.0.0.1', LocalPort: 8080, TargetPort: 1234, Active: true
-UPSTREAM_A_ADDR=127.0.0.1:8080
-
-# Name: 'upstream-b', Type: 1, Namespace: 'k4wd', Pod: 'upstream-b-577855f5c7-frwjm', Service: 'upstream-b', Remote: '8080', Local: '0.0.0.0:8081', LocalAddr: '0.0.0.0', LocalPort: 8081, TargetPort: 1234, Active: true
-UPSTREAM_B_ADDR=0.0.0.0:8081
-
-# Name: 'upstream-c', Type: 1, Namespace: 'k4wd', Pod: 'upstream-c-6c658678ff-w6cf2', Service: 'upstream-c', Remote: 'http-alt', Local: '', LocalAddr: '127.0.0.1', LocalPort: 57079, TargetPort: 1234, Active: true
-UPSTREAM_C_ADDR=127.0.0.1:57079
+$ k4wd -e > .env
 ```
 - Access the upstream services, e.g.:
 ```bash
@@ -89,8 +93,3 @@ Content-Length: 840
 ```bash
 kubectl delete -f example.yaml
 ```
-
-## k3d setup for GH actions...TBD
-- `curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash`
-- `k3d cluster create mycluster`
-    
