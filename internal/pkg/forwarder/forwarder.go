@@ -1,10 +1,12 @@
 package forwarder
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/tmsmr/k4wd/internal/pkg/config"
 	"github.com/tmsmr/k4wd/internal/pkg/kubeclient"
+	"io"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -16,7 +18,6 @@ import (
 	"k8s.io/kubectl/pkg/util"
 	"k8s.io/kubectl/pkg/util/podutils"
 	"net/http"
-	"os"
 	"sort"
 	"strconv"
 	"time"
@@ -49,9 +50,9 @@ func New(name string, spec config.Forward) (*Forwarder, error) {
 		Name:    name,
 		Forward: spec,
 		Io: genericiooptions.IOStreams{
-			In:     os.Stdin,
-			Out:    os.Stdout,
-			ErrOut: os.Stderr,
+			In:     &bytes.Buffer{},
+			Out:    io.Discard,
+			ErrOut: io.Discard,
 		},
 		Ready: make(chan struct{}),
 	}
