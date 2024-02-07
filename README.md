@@ -10,6 +10,10 @@
 K4wd allows to make multiple Resources in a Kubernetes cluster available locally for development and debugging purposes in a pleasant way.
 
 ## Quickstart / Demo
+- Install `k4wd`, e.g.:
+```bash
+go install github.com/tmsmr/k4wd@latest
+```
 - Have some [Services](https://kubernetes.io/docs/concepts/services-networking/service/) deployed, e.g.:
 ```bash
 cd docs
@@ -73,7 +77,7 @@ $ k4wd -e -o json
         "addr": "UPSTREAM_C_ADDR",
         "value": "127.0.0.1:53058"
     }
-]⏎
+]
 ```
 - (Optional) Or write the env variables to a file, e.g.:
 ```bash
