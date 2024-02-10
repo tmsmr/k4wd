@@ -48,6 +48,7 @@ func TestForward_LocalAddr(t *testing.T) {
 		{"addr:port", fields{"0.0.0.0:1234"}, "0.0.0.0", 1234, false},
 		{"addr", fields{"0.0.0.0"}, "", 0, true},
 		{"invalid", fields{"1234:0.0.0.0:1234"}, "", 0, true},
+		{"invalid port", fields{"65536"}, "", 0, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -122,6 +122,12 @@ func TestForwarder_Integration_Run(t *testing.T) {
 			Remote:    "mysql",
 		}}, args{kc, ""}, true},
 
+		{"invalid port number pod forward", fields{"int-test-po-numerical-invalid", config.Forward{
+			Pod:       "int-test-po",
+			Namespace: func() *string { s := "k4wd"; return &s }(),
+			Remote:    "65536",
+		}}, args{kc, ""}, true},
+
 		{"udp port pod forward", fields{"int-test-po-udp", config.Forward{
 			Pod:       "int-test-po-multiple-udp",
 			Namespace: func() *string { s := "k4wd"; return &s }(),
@@ -163,6 +169,12 @@ func TestForwarder_Integration_Run(t *testing.T) {
 			Namespace: func() *string { s := "k4wd"; return &s }(),
 			Remote:    "8080",
 		}}, args{kc, "deployment"}, false},
+
+		{"invalid numerical port service forward", fields{"int-test-svc-numerical-invalid", config.Forward{
+			Service:   "int-test-svc",
+			Namespace: func() *string { s := "k4wd"; return &s }(),
+			Remote:    "65536",
+		}}, args{kc, ""}, true},
 
 		{"invalid named port service forward", fields{"int-test-svc-invalid-named", config.Forward{
 			Service:   "int-test-svc",

@@ -59,6 +59,9 @@ func (f *Forward) LocalAddr() (string, int32, error) {
 	if err != nil {
 		return "", 0, err
 	}
+	if port < 1 || port > 65535 {
+		return "", 0, fmt.Errorf("invalid port number: %d", port)
+	}
 	return addr, int32(port), nil
 }
 

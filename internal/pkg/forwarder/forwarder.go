@@ -97,6 +97,9 @@ func (fwd *Forwarder) resolvePodTarget(name string) (*v1.Pod, int32, error) {
 	var podPort int32
 	val, err := strconv.Atoi(fwd.Remote)
 	if err == nil {
+		if val < 1 || val > 65535 {
+			return nil, 0, fmt.Errorf("invalid port number: %d", val)
+		}
 		podPort = int32(val)
 	} else {
 		podPort, err = util.LookupContainerPortNumberByName(*pod, fwd.Remote)
@@ -135,6 +138,9 @@ func (fwd *Forwarder) resolveServiceTarget() (*v1.Pod, int32, error) {
 	var svcPort int32
 	val, err := strconv.Atoi(fwd.Remote)
 	if err == nil {
+		if val < 1 || val > 65535 {
+			return nil, 0, fmt.Errorf("invalid port number: %d", val)
+		}
 		svcPort = int32(val)
 	} else {
 		svcPort, err = util.LookupServicePortNumberByName(*service, fwd.Remote)
