@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 )
 
 func must(err error) {
@@ -64,7 +65,6 @@ func run(opts cmdOpts) {
 	stop := make(chan struct{}, 1)
 	// chan we use to signal the main goroutine to initiate shutdown
 	shutdown := make(chan bool, len(fwds))
-	defer close(shutdown)
 
 	for name, fwd := range fwds {
 		failed := make(chan struct{}, 1)
@@ -119,6 +119,10 @@ func main() {
 	if opts.debug {
 		log.SetLevel(log.DebugLevel)
 	}
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: time.TimeOnly,
+	})
 	if opts.cmdMode == envMode {
 		ef, err := envfile.New(opts.conf)
 		must(err)
