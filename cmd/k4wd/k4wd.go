@@ -10,7 +10,6 @@ import (
 	"io"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
 	"syscall"
 )
@@ -21,83 +20,97 @@ func must(err error) {
 	}
 }
 
-func start(confPath string, kubeconfPath string) {
-	conf, err := config.Load(config.WithPath(confPath))
+func run(opts cmdOpts) {
+	conf, err := config.Load(config.WithPath(opts.conf))
 	must(err)
-	entries := make([]string, 0)
-	for n := range conf.Forwards {
-		entries = append(entries, n)
-	}
-	log.Infof("loaded %s (relaxed=%t) containing %d entries: (%s)", conf.Path, conf.Relaxed, len(conf.Forwards), strings.Join(entries, ", "))
+	log.Debugf("loaded %s containing %d entries", conf.Path, len(conf.Forwards))
 
 	var kc *kubeclient.Kubeclient
-	if kubeconfPath == "" {
+	if opts.kubeconf == "" {
 		kc, err = kubeclient.New()
 	} else {
-		kc, err = kubeclient.New(kubeclient.WithKubeconfig(kubeconfPath))
+		kc, err = kubeclient.New(kubeclient.WithKubeconfig(opts.kubeconf))
 	}
 	must(err)
-	log.Infof("created Kubeclient for %s", kc.Kubeconfig)
+	log.Debugf("created Kubeclient for %s", kc.Kubeconfig)
 
-	ef, err := envfile.New(confPath)
+	ef, err := envfile.New(opts.conf)
 	must(err)
-	log.Infof("initialized Envfile for %s", ef.Path())
+	log.Debugf("initialized Envfile %s", ef.Path())
 	defer func() {
-		log.Infof("removing %s", ef.Path())
+		log.Debugf("removing %s", ef.Path())
 		must(ef.Remove())
 	}()
 
 	fwds := make(map[string]*forwarder.Forwarder)
 	for name, spec := range conf.Forwards {
-		fwd, err := forwarder.New(name, spec, io.Discard)
+		stdout := io.Discard
+		if opts.debug {
+			stdout = os.Stdout
+		}
+		fwd, err := forwarder.New(name, spec, stdout)
 		must(err)
 		fwds[name] = fwd
 	}
 
-	var fwdsActive sync.WaitGroup
-	stopFwds := make(chan struct{}, 1)
+	must(ef.Update(fwds))
+
+	log.Infof("starting %d forwards", len(fwds))
+
+	//TODO: do we really need several waitgroups/channels to control the flow?
+
+	var active sync.WaitGroup
+	// chan we use to signal the forwards to terminate
+	stop := make(chan struct{}, 1)
+	// chan we use to signal the main goroutine to initiate shutdown
+	shutdown := make(chan bool, len(fwds))
+	defer close(shutdown)
 
 	for name, fwd := range fwds {
-		fwdFailed := make(chan struct{}, 1)
+		failed := make(chan struct{}, 1)
 
 		go func() {
-			fwdsActive.Add(1)
-			defer fwdsActive.Done()
+			active.Add(1)
+			defer active.Done()
 
-			err := fwd.Run(kc, stopFwds)
+			err := fwd.Run(kc, stop)
 			if err != nil {
-				fwd.Active = false
-				must(ef.Update(fwds))
-				log.Warnf("%s failed: %v", name, err)
 				if !conf.Relaxed {
-					log.Errorf("%s failed with global relaxed=false, stopping all forwards", name)
-					// TODO: panics for multiple failed forwards...
-					close(stopFwds)
+					log.Errorf("%s failed: %v", name, err)
+					shutdown <- true
+				} else {
+					log.Warnf("%s failed: %v", name, err)
 				}
-				close(fwdFailed)
+				close(failed)
 			}
 		}()
 
+		// wait for the forward to either be ready or have failed immediately to enforce sequential startup
 		select {
 		case <-fwd.Ready:
-			fwd.Active = true
-			must(ef.Update(fwds))
-			log.Infof("%s ready: %s:%d -> %s, %s, %d", name, fwd.BindAddr, fwd.BindPort, fwd.Namespace, fwd.TargetPod, fwd.TargetPort)
-			break
-		case <-fwdFailed:
+			log.Infof("%s ready (%s)", fwd.Name, fwd.String())
+		case <-failed:
 			break
 		}
 	}
 
 	term := make(chan os.Signal, 1)
 	signal.Notify(term, syscall.SIGINT, syscall.SIGTERM)
+
 	go func() {
-		<-term
-		log.Warnf("received SIGTERM, stopping all forwards")
-		close(stopFwds)
+		// wait for either a forward to fail with relaxed mode disabled or SIGINT/SIGTERM coming in
+		select {
+		case <-shutdown:
+			log.Errorf("at least one forward failed with relaxed mode disabled, shutting down...")
+		case <-term:
+			log.Warnf("received SIGTERM, shutting down...")
+		}
+		// signal all forwards to terminate
+		close(stop)
 	}()
 
-	fwdsActive.Wait()
+	// wait for all forwards to have completed
+	active.Wait()
 	log.Info("no active forwards left, exiting")
 }
 
@@ -114,5 +127,5 @@ func main() {
 		fmt.Print(string(content))
 		return
 	}
-	start(opts.conf, opts.kubeconf)
+	run(opts)
 }

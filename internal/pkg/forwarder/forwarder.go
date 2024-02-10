@@ -36,7 +36,6 @@ type Forwarder struct {
 	Clients *kubernetes.Clientset
 	Io      genericiooptions.IOStreams
 	Ready   chan struct{}
-	Active  bool
 
 	Namespace  string
 	BindAddr   string
@@ -78,6 +77,14 @@ func New(name string, spec config.Forward, stdout io.Writer) (*Forwarder, error)
 	}
 
 	return fwd, nil
+}
+
+func (fwd *Forwarder) String() string {
+	ns := fmt.Sprintf("%s/", fwd.Namespace)
+	if fwd.Context != nil {
+		ns = fmt.Sprintf("%s/%s", *fwd.Context, ns)
+	}
+	return fmt.Sprintf("%s:%d -> %s%s:%d", fwd.BindAddr, fwd.BindPort, ns, fwd.TargetPod, fwd.TargetPort)
 }
 
 // resolvePodTarget looks up a pod by name and resolves the target port.
