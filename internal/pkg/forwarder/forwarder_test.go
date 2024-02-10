@@ -4,6 +4,7 @@ import (
 	"github.com/tmsmr/k4wd/internal/pkg/config"
 	"github.com/tmsmr/k4wd/internal/pkg/kubeclient"
 	"k8s.io/client-go/tools/clientcmd/api"
+	"os"
 	"testing"
 )
 
@@ -24,7 +25,7 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := New(tt.args.name, tt.args.spec)
+			got, err := New(tt.args.name, tt.args.spec, os.Stdout)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
 				return

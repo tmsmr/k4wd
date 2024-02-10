@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	log "github.com/sirupsen/logrus"
@@ -9,22 +8,18 @@ import (
 	"github.com/tmsmr/k4wd/internal/pkg/envfile"
 	"github.com/tmsmr/k4wd/internal/pkg/forwarder"
 	"github.com/tmsmr/k4wd/internal/pkg/kubeclient"
+	"io"
 	"os"
 	"os/signal"
 	"strings"
 	"sync"
 	"syscall"
-	"time"
 )
 
 func must(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-func init() {
-	log.SetLevel(log.DebugLevel)
 }
 
 func start(confPath string, kubeconfPath string) {
@@ -55,28 +50,9 @@ func start(confPath string, kubeconfPath string) {
 
 	fwds := make(map[string]*forwarder.Forwarder)
 	for name, spec := range conf.Forwards {
-		fwd, err := forwarder.New(name, spec)
+		fwd, err := forwarder.New(name, spec, io.Discard)
 		must(err)
 		fwds[name] = fwd
-	}
-
-	// TODO: there has to be a better way...
-	for name := range fwds {
-		fwd := fwds[name]
-		go func() {
-			out := fwd.Io.Out.(*bytes.Buffer)
-			for {
-				line, err := out.ReadString('\n')
-				if err != nil {
-					if err.Error() != "EOF" {
-						log.Error(err)
-					}
-					time.Sleep(100 * time.Millisecond)
-				} else {
-					log.Debugf("k8s.io/client-go/tools/portforward %s", line)
-				}
-			}
-		}()
 	}
 
 	var fwdsActive sync.WaitGroup

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/tmsmr/k4wd/internal/pkg/config"
 	"github.com/tmsmr/k4wd/internal/pkg/kubeclient"
+	"io"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -17,6 +18,7 @@ import (
 	"k8s.io/kubectl/pkg/util"
 	"k8s.io/kubectl/pkg/util/podutils"
 	"net/http"
+	"os"
 	"sort"
 	"strconv"
 	"time"
@@ -44,14 +46,14 @@ type Forwarder struct {
 	TargetPort int32
 }
 
-func New(name string, spec config.Forward) (*Forwarder, error) {
+func New(name string, spec config.Forward, stdout io.Writer) (*Forwarder, error) {
 	fwd := &Forwarder{
 		Name:    name,
 		Forward: spec,
 		Io: genericiooptions.IOStreams{
 			In:     &bytes.Buffer{},
-			Out:    &bytes.Buffer{},
-			ErrOut: &bytes.Buffer{},
+			Out:    stdout,
+			ErrOut: os.Stderr,
 		},
 		Ready: make(chan struct{}),
 	}

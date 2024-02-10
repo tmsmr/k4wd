@@ -190,7 +190,7 @@ func TestForwarder_Integration_Run(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fwd, err := New(tt.fields.Name, tt.fields.Forward)
+			fwd, err := New(tt.fields.Name, tt.fields.Forward, os.Stdout)
 			if err != nil {
 				t.Fatal(err)
 			}
