@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  test:
+    uses: ./.github/workflows/tests.yml
+
+  build:
+    needs: test
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v5
+    - name: Store Binary Name
+      id: binary-name
+      run:  echo "K4WD_BIN_NAME=k4wd-${{ github.ref_name }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }}" >> $GITHUB_OUTPUT
+    - name: Build Binary
+      run: CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o ${{ steps.binary-name.outputs.K4WD_BIN_NAME }} -ldflags "-s -w" -v ./cmd/k4wd
+    - name: Store Artifact Name
+      id: artifact-name
+      run:  echo "K4WD_ART_NAME=k4wd-${{ github.ref_name }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.zip' || '.tar.gz' }}" >> $GITHUB_OUTPUT
+    - name: Create Archive for Linux and MacOS
+      if: matrix.goos != 'windows'
+      run: tar -czf ${{ steps.artifact-name.outputs.K4WD_ART_NAME }} ${{ steps.binary-name.outputs.K4WD_BIN_NAME }}
+    - name: Create Archive for Windows
+      if: matrix.goos == 'windows'
+      run: zip ${{ steps.artifact-name.outputs.K4WD_ART_NAME }} ${{ steps.binary-name.outputs.K4WD_BIN_NAME }}
+    - name: Upload Archive
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.artifact-name.outputs.K4WD_ART_NAME }}
+        path: ${{ steps.artifact-name.outputs.K4WD_ART_NAME }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Download Archives
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+        merge-multiple: true
+    - name: Generate Checksums
+      run: |
+        cd artifacts
+        shasum -a 256 * > SHA256SUMS.txt
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: artifacts/*
