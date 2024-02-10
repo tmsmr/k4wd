@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/tmsmr/k4wd/internal/pkg/config"
@@ -103,35 +102,17 @@ func start(confPath string, kubeconfPath string) {
 }
 
 func main() {
-	envGet := flag.Bool("e", false, "get environment instead of running k4wd")
-	envFmt := flag.String("o", "env", "output format for environment (env, no-export, json, ps, cmd)")
-	confPath := flag.String("f", "Forwardfile", "path to Forwardfile")
-	kubePath := flag.String("k", "", "alternative path to kubeconfig")
-	flag.Parse()
-	if *envGet {
-		ef, err := envfile.New(*confPath)
+	opts := parseOpts()
+	if opts.debug {
+		log.SetLevel(log.DebugLevel)
+	}
+	if opts.cmdMode == envMode {
+		ef, err := envfile.New(opts.conf)
 		must(err)
-		var format envfile.EnvFormat
-		switch *envFmt {
-		case "no-export":
-			format = envfile.FormatNoExport
-			break
-		case "json":
-			format = envfile.FormatJSON
-			break
-		case "ps":
-			format = envfile.FormatPS
-			break
-		case "cmd":
-			format = envfile.FormatCmd
-			break
-		default:
-			format = envfile.FormatDefault
-		}
-		content, err := ef.Load(format)
+		content, err := ef.Load(opts.format)
 		must(err)
 		fmt.Print(string(content))
-	} else {
-		start(*confPath, *kubePath)
+		return
 	}
+	start(opts.conf, opts.kubeconf)
 }
