@@ -3,116 +3,44 @@ kind: Namespace
 metadata:
   name: k4wd
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Pod
 metadata:
-  name: upstream-a
+  name: nginx
   namespace: k4wd
-  labels:
-    app: upstream-a
 spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: upstream-a
-  template:
-    metadata:
-      labels:
-        app: upstream-a
-    spec:
-      containers:
-        - name: upstream-a-fake-api
-          image: python:3
-          command: [ "python" ]
-          args: [ "-m", "http.server", "1234"]
-          ports:
-            - containerPort: 1234
+  containers:
+    - name: nginx
+      image: nginx
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: upstream-b
+  name: nginx
   namespace: k4wd
-  labels:
-    app: upstream-b
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: upstream-b
+      app: nginx
   template:
     metadata:
       labels:
-        app: upstream-b
+        app: nginx
     spec:
       containers:
-        - name: upstream-b-fake-api
-          image: python:3
-          command: [ "python" ]
-          args: [ "-m", "http.server", "1234"]
-          ports:
-            - containerPort: 1234
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: upstream-c
-  namespace: k4wd
-  labels:
-    app: upstream-c
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: upstream-c
-  template:
-    metadata:
-      labels:
-        app: upstream-c
-    spec:
-      containers:
-        - name: upstream-c-fake-api
-          image: python:3
-          command: [ "python" ]
-          args: [ "-m", "http.server", "1234"]
-          ports:
-            - containerPort: 1234
+        - name: nginx
+          image: nginx
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: upstream-a
+  name: nginx
   namespace: k4wd
 spec:
   selector:
-    app: upstream-a
+    app: nginx
   ports:
     - name: http-alt
       port: 8080
-      targetPort: 1234
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: upstream-b
-  namespace: k4wd
-spec:
-  selector:
-    app: upstream-b
-  ports:
-    - name: http-alt
-      port: 8080
-      targetPort: 1234
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: upstream-c
-  namespace: k4wd
-spec:
-  selector:
-    app: upstream-c
-  ports:
-    - name: http-alt
-      port: 8080
-      targetPort: 1234
+      targetPort: 80

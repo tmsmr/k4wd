@@ -1,18 +1,16 @@
-relaxed = true
+[forwards.nginx-pod]
+pod = "nginx"
+namespace = "k4wd"
+remote = "80"
+local = "1234"
 
-[forwards.upstream-a]
-service = "upstream-a"
+[forwards.nginx-deployment]
+deployment = "nginx"
+namespace = "k4wd"
+remote = "80"
+
+[forwards.nginx-service]
+service = "nginx"
 namespace = "k4wd"
 remote = "http-alt"
 local = "8080"
-
-[forwards.upstream-b]
-service = "upstream-b"
-namespace = "k4wd"
-remote = "8080"
-local = "0.0.0.0:8081"
-
-[forwards.upstream-c]
-service = "upstream-c"
-namespace = "k4wd"
-remote = "http-alt"
