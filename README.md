@@ -14,86 +14,62 @@ K4wd allows to make multiple Resources in a Kubernetes cluster available locally
 ```bash
 go install github.com/tmsmr/k4wd@latest
 ```
-- Have some [Services](https://kubernetes.io/docs/concepts/services-networking/service/) deployed, e.g.:
+- Have some Resources deployed, e.g.:
 ```bash
-cd docs
-kubectl apply -f example.yaml
+kubectl apply -f docs/example.yaml
 ```
-- Write a `Forwardfile`, e.g.:
+- Write a `Forwardfile`, e.g. `docs/Forwardfile`:
 ```toml
-relaxed = true
+[forwards.nginx-pod]
+pod = "nginx"
+namespace = "k4wd"
+remote = "80"
+local = "1234"
 
-[forwards.upstream-a]
-service = "upstream-a"
+[forwards.nginx-deployment]
+deployment = "nginx"
+namespace = "k4wd"
+remote = "80"
+
+[forwards.nginx-service]
+service = "nginx"
 namespace = "k4wd"
 remote = "http-alt"
 local = "8080"
 
-[forwards.upstream-b]
-service = "upstream-b"
-namespace = "k4wd"
-remote = "8080"
-local = "0.0.0.0:8081"
-
-[forwards.upstream-c]
-service = "upstream-c"
-namespace = "k4wd"
-remote = "http-alt"
 ```
 - Start `k4wd`, e.g.:
-```bash
-$ k4wd
-INFO[0000] loaded Forwardfile (relaxed=true) containing 3 entries: (upstream-b, upstream-c, upstream-a) 
-INFO[0000] created Kubeclient for https://127.0.0.1:6443 (/home/thomas/.kube/config) 
-INFO[0000] initialized Envfile for /tmp/k4wd_env_9c2bed59bac37ab739fca89c25e8cddfc25dd0568537c7c864751d3948962afb 
-Forwarding from 127.0.0.1:8080 -> 1234
-INFO[0000] upstream-a ready: 127.0.0.1:8080 -> k4wd, upstream-a-5bcdb8b947-m2f9z, 1234 
-Forwarding from 0.0.0.0:8081 -> 1234
-INFO[0000] upstream-b ready: 0.0.0.0:8081 -> k4wd, upstream-b-577855f5c7-frwjm, 1234 
-Forwarding from 127.0.0.1:57079 -> 1234
-INFO[0000] upstream-c ready: 127.0.0.1:57079 -> k4wd, upstream-c-6c658678ff-w6cf2, 1234 
 ```
-*Note that for upstream-c a random free port was assigned, since no value is defined in the `Forwardfile`*
-- (Optional) Get a new shell in the same context and request the active forwards as env variables, e.g.:
-```bash
-$ k4wd -e
-export UPSTREAM_A_ADDR=127.0.0.1:8080
-export UPSTREAM_B_ADDR=0.0.0.0:8081
-export UPSTREAM_C_ADDR=127.0.0.1:53058
+$ k4wd -f docs/Forwardfile 
+INFO[09:02:47] starting 3 forwards                          
+INFO[09:02:47] nginx-service ready (127.0.0.1:8080 -> k4wd/nginx-77b4fdf86c-f4wt6:80) 
+INFO[09:02:47] nginx-pod ready (127.0.0.1:1234 -> k4wd/nginx:80) 
+INFO[09:02:47] nginx-deployment ready (127.0.0.1:49758 -> k4wd/nginx-77b4fdf86c-f4wt6:80)
 ```
-- (Optional) Get the env variables in different formats, e.g.:
-```bash
-$ k4wd -e -o json
-[
-    {
-        "addr": "UPSTREAM_A_ADDR",
-        "value": "127.0.0.1:8080"
-    },
-    {
-        "addr": "UPSTREAM_B_ADDR",
-        "value": "0.0.0.0:8081"
-    },
-    {
-        "addr": "UPSTREAM_C_ADDR",
-        "value": "127.0.0.1:53058"
-    }
-]
+*Note that for nginx-deployment a random free port was assigned, since no value is defined in the `Forwardfile`*
+- (Optional) Get a new shell and request the active forwards as env variables, e.g.:
 ```
-- (Optional) Or write the env variables to a file, e.g.:
-```bash
-$ k4wd -e > .env
+$ k4wd -f docs/Forwardfile -e
+export NGINX_SERVICE_ADDR=127.0.0.1:8080
+export NGINX_POD_ADDR=127.0.0.1:1234
+export NGINX_DEPLOYMENT_ADDR=127.0.0.1:0
 ```
-- Access the upstream services, e.g.:
-```bash
-$ . .env && curl $UPSTREAM_A_ADDR -I
-HTTP/1.0 200 OK
-Server: SimpleHTTP/0.6 Python/3.12.1
-Date: Sat, 13 Jan 2024 14:55:28 GMT
-Content-type: text/html; charset=utf-8
-Content-Length: 840
+- Use the Forwards, e.g.:
+```
+$ k4wd -f docs/Forwardfile -e > .env
+$ . .env && curl $NGINX_SERVICE_ADDR -I
+HTTP/1.1 200 OK
+Server: nginx/1.25.3
+Date: Sun, 11 Feb 2024 08:05:56 GMT
+Content-Type: text/html
+Content-Length: 615
+Last-Modified: Tue, 24 Oct 2023 13:46:47 GMT
+Connection: keep-alive
+ETag: "6537cac7-267"
+Accept-Ranges: bytes
 ```
 - Stop the `k4wd` process
 - Clean up, e.g.:
-```bash
-kubectl delete -f example.yaml
+```
+kubectl delete -f docs/example.yaml
 ```
