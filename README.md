@@ -12,7 +12,7 @@ K4wd allows to make multiple Resources in a Kubernetes cluster available locally
 ## Quickstart / Demo
 - Install `k4wd`, e.g.:
 ```bash
-go install github.com/tmsmr/k4wd@latest
+go install github.com/tmsmr/k4wd/cmd/k4wd@latest
 ```
 - Have some Resources deployed, e.g.:
 ```bash
@@ -41,7 +41,7 @@ local = "8080"
 - Start `k4wd`, e.g.:
 ```
 $ k4wd -f docs/Forwardfile 
-INFO[09:02:47] starting 3 forwards                          
+INFO[09:02:47] starting 3 forwards
 INFO[09:02:47] nginx-service ready (127.0.0.1:8080 -> k4wd/nginx-77b4fdf86c-f4wt6:80) 
 INFO[09:02:47] nginx-pod ready (127.0.0.1:1234 -> k4wd/nginx:80) 
 INFO[09:02:47] nginx-deployment ready (127.0.0.1:49758 -> k4wd/nginx-77b4fdf86c-f4wt6:80)
