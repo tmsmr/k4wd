@@ -41,7 +41,6 @@ type Envfile struct {
 }
 
 func New(ref string) (*Envfile, error) {
-	// TODO: does this work on windows?
 	abs, err := filepath.Abs(ref)
 	if err != nil {
 		return nil, err
