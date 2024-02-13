@@ -1,4 +1,4 @@
-# K4wd
+# K4wd [keɪ ˈfɔrwərd]
 [![Go](https://github.com/tmsmr/k4wd/actions/workflows/push.yml/badge.svg)](https://github.com/tmsmr/k4wd/actions/workflows/push.yml)
 [![Go Report](https://goreportcard.com/badge/github.com/tmsmr/k4wd)](https://goreportcard.com/report/github.com/tmsmr/k4wd)
 
