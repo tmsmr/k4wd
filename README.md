@@ -8,7 +8,7 @@
 
 ### General
 K4wd allows to make multiple resources in Kubernetes clusters available locally for development and debugging purposes in a pleasant way.
-While there are many similar tools available, *K4wd* might fill a niche, the primary goals of it are:
+While there are many similar tools available, *K4wd* might fill a niche, the primary goals are:
 - No need to install additional software in the clusters
 - No elevated privileges or additional software on the client
 - Declarative configuration for complex setups
@@ -61,6 +61,12 @@ HTTP/1.1 200 OK
 ...
 ```
 - Stop the `k4wd` process and clean up: `kubectl delete -f docs/example.yaml`
+
+### Installation
+__TBD__
+
+### Usage
+__TBD__
 
 ### Forwardfile
 __TBD__
