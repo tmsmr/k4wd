@@ -68,7 +68,7 @@ Releases are available [here](https://github.com/tmsmr/k4wd/releases). While no 
 
 If you have *go* installed, you can also install *k4wd* using `go install github.com/tmsmr/k4wd/cmd/k4wd@latest`.
 
-### Usage
+## Usage
 ```
 $ k4wd -h
 Usage of k4wd:
