@@ -7,8 +7,8 @@
 **Docs are WiP**
 
 ### General
-K4wd allows to make multiple resources in Kubernetes clusters available locally for development and debugging purposes in a pleasant way.
-While there are many similar tools available, *K4wd* might fill a niche, the primary goals are:
+*K4wd* allows to make multiple resources in Kubernetes clusters available locally for development and debugging purposes in a pleasant way.
+While there are many similar tools available, *K4wd* might fill a niche. The primary goals are:
 - No need to install additional software in the clusters
 - No elevated privileges or additional software on the client
 - Declarative configuration for complex setups
@@ -63,10 +63,24 @@ HTTP/1.1 200 OK
 - Stop the `k4wd` process and clean up: `kubectl delete -f docs/example.yaml`
 
 ### Installation
-__TBD__
+For every tagged version the binaries are attached to the release. You can download it and put it in your `$PATH`.
+Releases are available [here](https://github.com/tmsmr/k4wd/releases). While no binaries are signed, you can verify the checksum from *SHA256SUMS.txt*.
+
+If you have *go* installed, you can also install *k4wd* using `go install github.com/tmsmr/k4wd/cmd/k4wd@latest`.
 
 ### Usage
-__TBD__
+```
+$ k4wd -h
+Usage of k4wd:
+  -d    enable debug logging
+  -e    print environment instead of running k4wd
+  -f string
+        path to Forwardfile (context) (default "Forwardfile")
+  -k string
+        alternative path to kubeconfig
+  -o string
+        output format for environment (env, no-export, json, ps, cmd) (default "env")
+```
 
 ### Forwardfile
 __TBD__
