@@ -8,11 +8,16 @@
 
 ## General
 *K4wd* allows to make multiple resources in Kubernetes clusters available locally for development and debugging purposes in a pleasant way.
+It doesn't reinvent the wheel as it is basically a wrapper around [PortForwarder.ForwardPorts](https://pkg.go.dev/k8s.io/client-go/tools/portforward#PortForwarder.ForwardPorts) with some extras.
 While there are many similar tools available, *K4wd* might fill a niche. The primary goals are:
 - No need to install additional software in the clusters
 - No elevated privileges or additional software on the client
 - Declarative configuration for complex setups
 - Easy integration in development workflows
+
+## Use cases
+- Local development against upstream resources running in Kubernetes clusters
+- Comparison of workload bahaviours in different Kubernetes contexts
 
 ## Quickstart / Demo
 - Install *k4wd*: `go install github.com/tmsmr/k4wd/cmd/k4wd@latest`
@@ -64,7 +69,7 @@ HTTP/1.1 200 OK
 
 ## Installation
 For every tagged version the binaries are attached to the release. You can download it and put it in your `$PATH`.
-Releases are available [here](https://github.com/tmsmr/k4wd/releases). While no binaries are signed, you can verify the checksum from *SHA256SUMS.txt*.
+Releases are available [here](https://github.com/tmsmr/k4wd/releases). While the binaries are not signed, you can verify the checksum from *SHA256SUMS.txt*.
 
 If you have *go* installed, you can also install *k4wd* using `go install github.com/tmsmr/k4wd/cmd/k4wd@latest`.
 
@@ -83,6 +88,10 @@ Usage of k4wd:
 ```
 
 ## Forwardfile
+### Configuration
+__TBD__
+
+### Context
 __TBD__
 
 ## Limitations
